@@ -13,8 +13,9 @@ interface Task {
   createdAt?: string;
 }
 
-// Replace this with your EC2 public IP
-const API_BASE = "http://3.109.153.24:3001/api/tasks";
+//  Change #1 — use environment variable instead of hardcoding IP
+// This makes deployment safer and works with .env (VITE_API_BASE_URL)
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api/tasks";
 
 const Index = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -23,7 +24,7 @@ const Index = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
 
-  // Fetch tasks from backend (DynamoDB)
+  //  Fetch all tasks from backend (DynamoDB)
   const fetchTasks = async () => {
     try {
       const res = await fetch(API_BASE);
@@ -46,7 +47,7 @@ const Index = () => {
     fetchTasks();
   }, []);
 
-  // Create or update task
+  //  Create or update task (POST / PUT)
   const handleSave = async (title: string, description: string) => {
     try {
       if (editingTask) {
@@ -56,8 +57,8 @@ const Index = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title, description }),
         });
-        if (!res.ok) throw new Error("Update failed");
 
+        if (!res.ok) throw new Error("Update failed");
         toast({ title: "Success", description: "Task updated successfully" });
       } else {
         // Create new task
@@ -90,7 +91,7 @@ const Index = () => {
     }
   };
 
-  // Toggle task status (active/completed)
+  //  Toggle task status (PUT /status)
   const handleToggle = async (id: string, completed: boolean) => {
     try {
       const newStatus = completed ? "completed" : "active";
@@ -113,7 +114,7 @@ const Index = () => {
     }
   };
 
-  // Delete task (if backend supports DELETE)
+  //  Delete task (DELETE)
   const handleDelete = async (id: string) => {
     try {
       const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
@@ -130,13 +131,13 @@ const Index = () => {
     }
   };
 
-  // Edit task
+  //  Edit task
   const handleEdit = (task: Task) => {
     setEditingTask(task);
     setDialogOpen(true);
   };
 
-  // Filter tasks
+  //  Filter tasks
   const filteredTasks = tasks.filter((task) => {
     if (filter === "active") return task.status === "active";
     if (filter === "completed") return task.status === "completed";
@@ -209,25 +210,13 @@ const Index = () => {
 
         {/* Filters */}
         <div className="flex gap-2 mb-6 bg-card rounded-lg p-2 shadow-card border border-border w-fit">
-          <Button
-            variant={filter === "all" ? "default" : "ghost"}
-            onClick={() => setFilter("all")}
-            size="sm"
-          >
+          <Button variant={filter === "all" ? "default" : "ghost"} onClick={() => setFilter("all")} size="sm">
             All
           </Button>
-          <Button
-            variant={filter === "active" ? "default" : "ghost"}
-            onClick={() => setFilter("active")}
-            size="sm"
-          >
+          <Button variant={filter === "active" ? "default" : "ghost"} onClick={() => setFilter("active")} size="sm">
             Active
           </Button>
-          <Button
-            variant={filter === "completed" ? "default" : "ghost"}
-            onClick={() => setFilter("completed")}
-            size="sm"
-          >
+          <Button variant={filter === "completed" ? "default" : "ghost"} onClick={() => setFilter("completed")} size="sm">
             Completed
           </Button>
         </div>
