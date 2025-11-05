@@ -15,7 +15,7 @@ interface Task {
 
 //  Change #1 — use environment variable instead of hardcoding IP
 // This makes deployment safer and works with .env (VITE_API_BASE_URL)
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api/tasks";
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 const Index = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
