@@ -10,9 +10,11 @@ interface Task {
   title: string;
   description: string | null;
   status: string; // "active" or "completed"
-  created_at: string;
-  updated_at: string;
+  createdAt?: string;
 }
+
+// Replace this with your EC2 public IP
+const API_BASE = "http://3.109.153.24:3001/api/tasks";
 
 const Index = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -21,19 +23,18 @@ const Index = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
 
-  const API_BASE = "http://<YOUR_EC2_PUBLIC_IP>:3001/api/tasks";
-
-  // Fetch tasks from DynamoDB through your backend
+  // Fetch tasks from backend (DynamoDB)
   const fetchTasks = async () => {
     try {
       const res = await fetch(API_BASE);
+      if (!res.ok) throw new Error("Failed to fetch tasks");
       const data = await res.json();
       setTasks(data || []);
     } catch (error) {
       console.error("Error fetching tasks:", error);
       toast({
         title: "Error",
-        description: "Failed to load tasks",
+        description: "Failed to load tasks from server",
         variant: "destructive",
       });
     } finally {
@@ -45,7 +46,7 @@ const Index = () => {
     fetchTasks();
   }, []);
 
-  // Create or update a task
+  // Create or update task
   const handleSave = async (title: string, description: string) => {
     try {
       if (editingTask) {
@@ -55,8 +56,8 @@ const Index = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title, description }),
         });
-
         if (!res.ok) throw new Error("Update failed");
+
         toast({ title: "Success", description: "Task updated successfully" });
       } else {
         // Create new task
@@ -74,7 +75,7 @@ const Index = () => {
         });
 
         if (!res.ok) throw new Error("Create failed");
-        toast({ title: "Success", description: "Task created successfully" });
+        toast({ title: "Success", description: "Task added successfully" });
       }
 
       fetchTasks();
@@ -89,10 +90,11 @@ const Index = () => {
     }
   };
 
-  // Toggle task status (Active/Completed)
+  // Toggle task status (active/completed)
   const handleToggle = async (id: string, completed: boolean) => {
     try {
       const newStatus = completed ? "completed" : "active";
+
       const res = await fetch(`${API_BASE}/${id}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -111,7 +113,7 @@ const Index = () => {
     }
   };
 
-  // (Optional) Delete task (if you add DELETE route in backend)
+  // Delete task (if backend supports DELETE)
   const handleDelete = async (id: string) => {
     try {
       const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
@@ -170,6 +172,7 @@ const Index = () => {
         </div>
       </header>
 
+      {/* Main */}
       <main className="container mx-auto px-4 py-8">
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -204,15 +207,27 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Filter Tabs */}
+        {/* Filters */}
         <div className="flex gap-2 mb-6 bg-card rounded-lg p-2 shadow-card border border-border w-fit">
-          <Button variant={filter === "all" ? "default" : "ghost"} onClick={() => setFilter("all")} size="sm">
+          <Button
+            variant={filter === "all" ? "default" : "ghost"}
+            onClick={() => setFilter("all")}
+            size="sm"
+          >
             All
           </Button>
-          <Button variant={filter === "active" ? "default" : "ghost"} onClick={() => setFilter("active")} size="sm">
+          <Button
+            variant={filter === "active" ? "default" : "ghost"}
+            onClick={() => setFilter("active")}
+            size="sm"
+          >
             Active
           </Button>
-          <Button variant={filter === "completed" ? "default" : "ghost"} onClick={() => setFilter("completed")} size="sm">
+          <Button
+            variant={filter === "completed" ? "default" : "ghost"}
+            onClick={() => setFilter("completed")}
+            size="sm"
+          >
             Completed
           </Button>
         </div>
@@ -225,7 +240,9 @@ const Index = () => {
         ) : filteredTasks.length === 0 ? (
           <div className="text-center py-12 bg-card rounded-lg shadow-card border border-border">
             <p className="text-muted-foreground mb-4">
-              {filter === "all" ? "No tasks yet. Create your first task to get started!" : `No ${filter} tasks.`}
+              {filter === "all"
+                ? "No tasks yet. Create your first task to get started!"
+                : `No ${filter} tasks.`}
             </p>
             {filter === "all" && (
               <Button
@@ -243,13 +260,19 @@ const Index = () => {
         ) : (
           <div className="space-y-3">
             {filteredTasks.map((task) => (
-              <TaskCard key={task.id} task={task} onToggle={handleToggle} onEdit={handleEdit} onDelete={handleDelete} />
+              <TaskCard
+                key={task.id}
+                task={task}
+                onToggle={handleToggle}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
             ))}
           </div>
         )}
       </main>
 
-      {/* Task Dialog */}
+      {/* Dialog */}
       <TaskDialog
         open={dialogOpen}
         onOpenChange={(open) => {
