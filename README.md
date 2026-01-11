@@ -1,4 +1,5 @@
 1.	PROBLEM IDENTIFICATION
+
 1.1	Background
 In traditional web applications, hosting and managing infrastructure often require significant effort in maintaining on-premise servers, manual database management, and limited scalability. Most college or enterprise-level task management systems rely on fixed hardware or local hosting solutions that are not optimized for availability, scalability, or monitoring.
 With the growing need for real-time task tracking and remote accessibility, deploying such systems on the cloud offers:
